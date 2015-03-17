@@ -1,0 +1,23 @@
+<service name="dhs">
+	<parameter name="ServiceClass" locked="xsd:false">DhsTranslator</parameter>
+	<parameter name="loadServiceAtStartup" locked="xsd:false">true</parameter>
+    <parameter name="myName" locked="xsd:false">seqexec</parameter>
+    <parameter name="dhsHost" locked="xsd:false">cpodhsxx</parameter>  
+    <parameter name="dhsName" locked="xsd:false">dataServerTestSS</parameter>
+    <parameter name="dhsSimulate" locked="xsd:false">true</parameter>
+	<description>
+		REST DHS adapter
+	</description>
+	<operation name="createImage">
+		<parameter name="RESTMethod">POST</parameter>
+		<parameter name="RESTLocation">images</parameter>
+	</operation>
+	<operation name="setParameters">
+		<parameter name="RESTMethod">PUT</parameter>
+		<parameter name="RESTLocation">images/{id}</parameter>
+	</operation>
+	<operation name="setKeywords">
+		<parameter name="RESTMethod">PUT</parameter>
+		<parameter name="RESTLocation">images/{id}/keywords</parameter>
+	</operation>
+</service>

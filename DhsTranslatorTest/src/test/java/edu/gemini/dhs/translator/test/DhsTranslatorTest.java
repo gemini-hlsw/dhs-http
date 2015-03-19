@@ -140,14 +140,16 @@ public class DhsTranslatorTest {
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
                 .putArray("keywords");
+        keysArray.addObject().put("name", "instrument").put("type", "STRING")
+                .put("value", "GMOS-S");
         keysArray.addObject().put("name", "OBSERVAT").put("type", "STRING")
                 .put("value", "Gemini-South");
-        keysArray.addObject().put("name", "BITPIX").put("type", "INT32")
-                .put("value", 16);
-        keysArray.addObject().put("name", "RA").put("type", "FLOAT")
+        keysArray.addObject().put("name", "RA").put("type", "DOUBLE")
                 .put("value", 162.31029167);
         keysArray.addObject().put("name", "PREIMAGE").put("type", "BOOLEAN")
                 .put("value", false);
+        keysArray.addObject().put("name", "NAMPS").put("type", "INT32")
+                .put("value", 3);
 
         StringEntity input = new StringEntity(reqNode.toString());
         put.setEntity(input);
@@ -172,8 +174,13 @@ public class DhsTranslatorTest {
         assertEquals("Operation failed.", "success", status.asText());
     }
 
+    /*
+     * Attempt to set string value to integer keyword. Rejected by the HTTP
+     * service.
+     */
     @Test
-    public void testSetBadKeyword() throws ClientProtocolException, IOException {
+    public void testSetKeywordWrongValueType() throws ClientProtocolException,
+            IOException {
         String imageId = getImageWithParams();
         HttpClient client = HttpClientBuilder.create().build();
 
@@ -183,7 +190,50 @@ public class DhsTranslatorTest {
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
                 .putArray("keywords");
-        keysArray.addObject().put("name", "BITPIX").put("type", "INT32")
+        keysArray.addObject().put("name", "instrument").put("type", "STRING")
+                .put("value", "GMOS-S");
+        keysArray.addObject().put("name", "NAMPS").put("type", "INT32")
+                .put("value", "dummy");
+
+        StringEntity input = new StringEntity(reqNode.toString());
+        put.setEntity(input);
+        put.setHeader("Content-Type", "application/json");
+        HttpResponse response = client.execute(put);
+
+        assertTrue("Operation rejected.", response.getStatusLine()
+                .getStatusCode() == HttpStatus.SC_OK);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode responseNode = mapper.readTree(
+                new InputStreamReader(response.getEntity().getContent())).get(
+                "response");
+        assertNotNull("Respose did not response node.", responseNode);
+
+        JsonNode status = responseNode.get("status");
+        assertNotNull("Respose did not contain status.", status);
+        assertEquals("Operation did not fail.", "error", status.asText());
+    }
+
+    /*
+     * Attempt to set keyword with a type different from the one registered in
+     * the DHS Server. HTTP Server must relay the error returned by the DHS
+     * Server.
+     */
+    @Test
+    public void testSetKeywordWrongType() throws ClientProtocolException,
+            IOException {
+        String imageId = getImageWithParams();
+        HttpClient client = HttpClientBuilder.create().build();
+
+        HttpPut put = new HttpPut(
+                "http://localhost:9090/axis2/services/dhs/images/" + imageId
+                        + "/keywords");
+        ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
+        ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
+                .putArray("keywords");
+        keysArray.addObject().put("name", "instrument").put("type", "STRING")
+                .put("value", "GMOS-S");
+        keysArray.addObject().put("name", "NAMPS").put("type", "STRING")
                 .put("value", "dummy");
 
         StringEntity input = new StringEntity(reqNode.toString());

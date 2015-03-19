@@ -10,6 +10,7 @@
 #include <axiom_element.h>
 #include <axis2_conf.h>
 #include <sstream>
+#include "DhsAdapter.h"
 #include "DhsAdapterSim.h"
 
 using namespace std;
@@ -168,7 +169,9 @@ int DhsService::stubInitWithConfig(axis2_svc_skeleton_t* svc_skeleton,
         AXIS2_LOG_INFO_MSG(env->log, "Using simulated DHS adapter.");
 
     } else {
-        //TODO: create real DhsAdapter
+        pAdapter = new DhsAdapter(myName, dhsHost, dhsName, env->log);
+
+        AXIS2_LOG_INFO_MSG(env->log, "Using real DHS adapter.");
     }
 
     if (pAdapter == NULL) {
@@ -189,7 +192,8 @@ axiom_node_t* DhsService::stubInvoke(axis2_svc_skeleton_t* svc_skeleton,
             AXIS2_LOG_ERROR_MSG(env->log, e.what());
         }
     }
-    return buildErrorResponse(INTERNAL_ERROR, "Internal error processing request.", env);
+    return buildErrorResponse(INTERNAL_ERROR,
+            "Internal error processing request.", env);
 }
 
 axiom_node_t* DhsService::stubOnFault(axis2_svc_skeleton_t* svc_skeleton,
@@ -296,7 +300,7 @@ optional<axiom_node_t*> DhsService::setParameters(const std::string *imageId,
             DHS_STATUS status = dhsAdapter->setImageLifeTime(id, lifetime);
             if (status != DHS_S_SUCCESS) {
                 return buildErrorResponse(DHS_ERROR,
-                        "DHS error while trying to to set data set lifetime.",
+                        "DHS error while trying to set data set lifetime.",
                         env);
             }
         }
@@ -304,7 +308,7 @@ optional<axiom_node_t*> DhsService::setParameters(const std::string *imageId,
             DHS_STATUS status = dhsAdapter->setImageContrib(id, contributors);
             if (status != DHS_S_SUCCESS) {
                 return buildErrorResponse(DHS_ERROR,
-                        "DHS error while trying to to set data set contributors.",
+                        "DHS error while trying to set data set contributors.",
                         env);
             }
         }
@@ -355,7 +359,7 @@ axiom_node_t* DhsService::setKeywords(const axutil_env_t* env,
         DHS_STATUS status = dhsAdapter->setImageKeywords(id, keywords, final);
         if (status != DHS_S_SUCCESS) {
             return buildErrorResponse(DHS_ERROR,
-                    "DHS error while trying to to set data set keywords.", env);
+                    "DHS error while trying to set data set keywords.", env);
         }
     } else {
         if (id.empty()) {

@@ -43,7 +43,7 @@ The DHS operations denote success of failure in the response body. An error resp
 { "response" : {
         "status" : "error"
         "errors" : [ {
-             "type" : string /* error type, can be  BAD\_REQUEST | DHS\_ERROR | INTERNAL\_SERVER\_ERROR */
+             "type" : string /* error type, can be  BAD_REQUEST | DHS_ERROR | INTERNAL_SERVER_ERROR */
              "message" : string /* error message */
         } ]
     }

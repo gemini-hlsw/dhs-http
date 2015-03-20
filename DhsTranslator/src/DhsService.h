@@ -81,8 +81,8 @@ private:
             const std::string &message, const axutil_env_t* env);
     static axiom_node_t* buildErrorResponse(const std::string &type,
             const std::string &message, const axutil_env_t* env);
-    static axiom_node_t* buildErrorResponse(const std::vector<axiom_node_t*> &array,
-            const axutil_env_t* env);
+    static axiom_node_t* buildErrorResponse(
+            const std::vector<axiom_node_t*> &array, const axutil_env_t* env);
     static axiom_node_t* buildSuccessResponse(axiom_node_t* result,
             const axutil_env_t* env);
 
@@ -128,7 +128,8 @@ private:
      * it puts returns false.
      */
     template<typename T> bool parseArrayNode(const axutil_env_t *env,
-            axiom_node_t *node, std::vector<T> &array, const std::string &type) {
+            axiom_node_t *node, std::vector<T> &array,
+            const std::string &type) {
         bool ret = true;
 
         if (axiom_node_get_node_type(node, env) == AXIOM_ELEMENT) {
@@ -230,7 +231,8 @@ public:
     }
 };
 
-//Type bool needs an specialized version because it needs to enable alpha values in the conversion.
+//Type bool needs an specialized version because it needs to enable alpha
+//values in the conversion.
 template<> inline boost::optional<bool> DhsService::parseVal<bool>(
         const axutil_env_t *env, axiom_node_t *node) {
     if (env != NULL && node != NULL

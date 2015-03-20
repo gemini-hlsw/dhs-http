@@ -10,6 +10,8 @@
 
 using namespace std;
 
+const struct timespec DhsAdapter::LOCK_TIMEOUT = { 5, 0 };
+
 DhsAdapter::DhsAdapter(std::string &myName, string &serverHost,
         string &serverName, axutil_log_t * log) {
     this->myName = myName;
@@ -49,7 +51,9 @@ DhsAdapter::~DhsAdapter() {
 DHS_STATUS DhsAdapter::createImage(ImageId& id) {
     DHS_STATUS status = DHS_S_SUCCESS;
 
-    pthread_mutex_lock(&lock);
+    if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+        return DHS_E_CTL_CMD;
+    }
     char *newId = dhsBdName(connection, &status);
     pthread_mutex_unlock(&lock);
     if (status == DHS_S_SUCCESS) {
@@ -63,7 +67,9 @@ DHS_STATUS DhsAdapter::setImageLifeTime(const ImageId& id,
         DHS_BD_LIFETIME lifeTime) {
     DHS_STATUS status = DHS_S_SUCCESS;
 
-    pthread_mutex_lock(&lock);
+    if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+        return DHS_E_CTL_CMD;
+    }
     dhsBdCtl(connection, DHS_BD_CTL_LIFETIME, id.c_str(), lifeTime, &status);
     pthread_mutex_unlock(&lock);
 
@@ -82,7 +88,9 @@ DHS_STATUS DhsAdapter::setImageContrib(const ImageId& id,
             array[i++] = iter->c_str();
         }
 
-        pthread_mutex_lock(&lock);
+        if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+            return DHS_E_CTL_CMD;
+        }
         dhsBdCtl(connection, DHS_BD_CTL_CONTRIB, id.c_str(),
                 (int) contribs.size(), array, &status);
         pthread_mutex_unlock(&lock);
@@ -157,7 +165,9 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
             }
         }
         if(dhsAvListSize(avList, &status) > 0) {
-            pthread_mutex_lock(&lock);
+            if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+                return DHS_E_CTL_CMD;
+            }
             DHS_TAG tag = dhsBdPut(connection, id.c_str(), DHS_BD_PT_DS, final?DHS_TRUE:DHS_FALSE, avList, &status);
             dhsWait(1, &tag, &status);
             if (dhsStatus(tag, NULL, &status) != DHS_CS_DONE) {

@@ -16,6 +16,8 @@
 
 class DhsAdapterSim: public IDhsAdapter {
 private:
+    static const int MAX_IMAGE_ID = 10000;
+
     std::string myName;
     std::string serverHost;
     std::string serverName;

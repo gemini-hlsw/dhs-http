@@ -12,9 +12,12 @@
 #include <dhs.h>
 #include <axutil_log.h>
 #include <pthread.h>
+#include <time.h>
 
 class DhsAdapter: public IDhsAdapter {
 private:
+    static const struct timespec LOCK_TIMEOUT;
+
     std::string myName;
     std::string serverHost;
     std::string serverName;

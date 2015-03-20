@@ -27,15 +27,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class DhsTranslatorTest {
     private final static String BASE_URI = "http://localhost:9090/axis2/services/dhs/images";
 
-    @Before
-    public void setUp() throws Exception {
-
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
     public void testCreateImage() throws ClientProtocolException, IOException {
         HttpClient client = HttpClientBuilder.create().build();

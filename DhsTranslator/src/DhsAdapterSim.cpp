@@ -40,7 +40,7 @@ DHS_STATUS DhsAdapterSim::createImage(ImageId &id) {
     pthread_mutex_lock(&lock);
     {
         latchedId = nextId;
-        if (++nextId > MAX_IMAGE_ID) {
+        if (++nextId >= MAX_IMAGE_ID) {
             nextId = 1;
         }
     }

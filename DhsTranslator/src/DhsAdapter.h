@@ -24,7 +24,7 @@ private:
     axutil_log_t * log;
     pthread_mutex_t lock;
     DHS_CONNECT connection;
-    DHS_THREAD  thread;
+    DHS_THREAD thread;
     bool dhsInitialized;
 
 public:
@@ -38,7 +38,6 @@ public:
             const std::vector<std::string>& contribs);
     DHS_STATUS setImageKeywords(const ImageId& id,
             const std::vector<Keyword>& keywords, bool final = false);
-    void setTimeout(unsigned int timeout);
 };
 
 #endif /* DHSADAPTER_H_ */

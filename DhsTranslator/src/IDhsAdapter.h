@@ -17,7 +17,7 @@
 #include "dhs.h"
 
 /** Interface IDhsAdapter. This interface offers access to the DHS server for
- * creating an configuring images. All methods block the caller.
+ * creating and configuring images. All methods block the caller.
  */
 class IDhsAdapter {
 public:
@@ -114,7 +114,7 @@ public:
         }
         template<typename T> T getValue() const {
             throw(std::logic_error(
-                        "Attempt to retrieve unsupported type of value from Keyword object."));
+                    "Attempt to retrieve unsupported type of value from Keyword object."));
         }
     private:
         std::string name;
@@ -173,13 +173,6 @@ public:
      */
     virtual DHS_STATUS setImageKeywords(const ImageId& id,
             const std::vector<Keyword>& keywords, bool final = false) = 0;
-
-    /**
-     * Set the timeout for the blocking operations.
-     *
-     * @param timeout maximum time to wait for completion, in milliseconds.
-     */
-    virtual void setTimeout(unsigned int timeout) = 0;
 
     virtual ~IDhsAdapter() {
     }
@@ -250,7 +243,8 @@ template<> inline double IDhsAdapter::Keyword::getValue<double>() const {
             "Attempt to retrieve double value from Keyword of a different type."));
 }
 
-template<> inline const std::string& IDhsAdapter::Keyword::getValue<const std::string&>() const {
+template<> inline const std::string& IDhsAdapter::Keyword::getValue<
+        const std::string&>() const {
     if (type == DHS_DT_STRING) {
         return *value.stringVal;
     }

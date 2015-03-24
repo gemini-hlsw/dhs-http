@@ -51,7 +51,7 @@ DhsAdapter::~DhsAdapter() {
 DHS_STATUS DhsAdapter::createImage(ImageId& id) {
     DHS_STATUS status = DHS_S_SUCCESS;
 
-    if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+    if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
         return DHS_E_CTL_CMD;
     }
     char *newId = dhsBdName(connection, &status);
@@ -67,7 +67,7 @@ DHS_STATUS DhsAdapter::setImageLifeTime(const ImageId& id,
         DHS_BD_LIFETIME lifeTime) {
     DHS_STATUS status = DHS_S_SUCCESS;
 
-    if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+    if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
         return DHS_E_CTL_CMD;
     }
     dhsBdCtl(connection, DHS_BD_CTL_LIFETIME, id.c_str(), lifeTime, &status);
@@ -88,7 +88,7 @@ DHS_STATUS DhsAdapter::setImageContrib(const ImageId& id,
             array[i++] = iter->c_str();
         }
 
-        if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+        if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
             return DHS_E_CTL_CMD;
         }
         dhsBdCtl(connection, DHS_BD_CTL_CONTRIB, id.c_str(),
@@ -111,64 +111,66 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
                 iter != keywords.end(); iter++) {
             switch (iter->getType()) {
             case DHS_DT_UINT8: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<uint8_t>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<uint8_t>(), &status);
                 break;
             }
             case DHS_DT_UINT16: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<uint16_t>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<uint16_t>(), &status);
                 break;
             }
             case DHS_DT_UINT32: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<uint32_t>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<uint32_t>(), &status);
                 break;
             }
             case DHS_DT_INT8: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<int8_t>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<int8_t>(), &status);
                 break;
             }
             case DHS_DT_INT16: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<int16_t>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<int16_t>(), &status);
                 break;
             }
             case DHS_DT_INT32: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<int32_t>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<int32_t>(), &status);
                 break;
             }
             case DHS_DT_FLOAT: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<float>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<float>(), &status);
                 break;
             }
             case DHS_DT_DOUBLE: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<double>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<double>(), &status);
                 break;
             }
             case DHS_DT_STRING: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<const std::string&>().c_str(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<const std::string&>().c_str(),
+                        &status);
                 break;
             }
             case DHS_DT_BOOLEAN: {
-                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0, NULL,
-                        iter->getValue<bool>(), &status);
+                dhsAvAdd(avList, iter->getName().c_str(), iter->getType(), 0,
+                        NULL, iter->getValue<bool>(), &status);
                 break;
             }
             default: {
             }
             }
         }
-        if(dhsAvListSize(avList, &status) > 0) {
-            if( pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0 ) {
+        if (dhsAvListSize(avList, &status) > 0) {
+            if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
                 return DHS_E_CTL_CMD;
             }
-            DHS_TAG tag = dhsBdPut(connection, id.c_str(), DHS_BD_PT_DS, final?DHS_TRUE:DHS_FALSE, avList, &status);
+            DHS_TAG tag = dhsBdPut(connection, id.c_str(), DHS_BD_PT_DS,
+                    final ? DHS_TRUE : DHS_FALSE, avList, &status);
             dhsWait(1, &tag, &status);
             if (dhsStatus(tag, NULL, &status) != DHS_CS_DONE) {
                 status = DHS_E_CTL_CMD;
@@ -182,7 +184,4 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
     }
 
     return status;
-}
-
-void DhsAdapter::setTimeout(unsigned int timeout) {
 }

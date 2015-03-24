@@ -14,7 +14,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "dhs.h"
+#include <dhs.h>
+#include "DhsUtil.h"
 
 /** Interface IDhsAdapter. This interface offers access to the DHS server for
  * creating and configuring images. All methods block the caller.
@@ -184,7 +185,8 @@ template<> inline int8_t IDhsAdapter::Keyword::getValue<int8_t>() const {
         return value.intVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve int8_t value from Keyword of a different type."));
+            "Attempt to retrieve int8_t value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline int16_t IDhsAdapter::Keyword::getValue<int16_t>() const {
@@ -192,7 +194,8 @@ template<> inline int16_t IDhsAdapter::Keyword::getValue<int16_t>() const {
         return value.intVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve int16_t value from Keyword of a different type."));
+            "Attempt to retrieve int16_t value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline int32_t IDhsAdapter::Keyword::getValue<int32_t>() const {
@@ -200,7 +203,8 @@ template<> inline int32_t IDhsAdapter::Keyword::getValue<int32_t>() const {
         return value.intVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve int32_t value from Keyword of a different type."));
+            "Attempt to retrieve int32_t value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline uint8_t IDhsAdapter::Keyword::getValue<uint8_t>() const {
@@ -208,7 +212,8 @@ template<> inline uint8_t IDhsAdapter::Keyword::getValue<uint8_t>() const {
         return value.uintVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve uint8_t value from Keyword of a different type."));
+            "Attempt to retrieve uint8_t value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline uint16_t IDhsAdapter::Keyword::getValue<uint16_t>() const {
@@ -216,7 +221,8 @@ template<> inline uint16_t IDhsAdapter::Keyword::getValue<uint16_t>() const {
         return value.uintVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve uint16_t value from Keyword of a different type."));
+            "Attempt to retrieve uint16_t value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline uint32_t IDhsAdapter::Keyword::getValue<uint32_t>() const {
@@ -224,7 +230,8 @@ template<> inline uint32_t IDhsAdapter::Keyword::getValue<uint32_t>() const {
         return value.uintVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve uint32_t value from Keyword of a different type."));
+            "Attempt to retrieve uint32_t value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline float IDhsAdapter::Keyword::getValue<float>() const {
@@ -232,7 +239,8 @@ template<> inline float IDhsAdapter::Keyword::getValue<float>() const {
         return value.floatVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve float value from Keyword of a different type."));
+            "Attempt to retrieve float value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline double IDhsAdapter::Keyword::getValue<double>() const {
@@ -240,7 +248,8 @@ template<> inline double IDhsAdapter::Keyword::getValue<double>() const {
         return value.doubleVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve double value from Keyword of a different type."));
+            "Attempt to retrieve double value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline const std::string& IDhsAdapter::Keyword::getValue<
@@ -249,7 +258,8 @@ template<> inline const std::string& IDhsAdapter::Keyword::getValue<
         return *value.stringVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve string value from Keyword of a different type."));
+            "Attempt to retrieve string value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline std::string IDhsAdapter::Keyword::getValue<std::string>() const {
@@ -257,7 +267,8 @@ template<> inline std::string IDhsAdapter::Keyword::getValue<std::string>() cons
         return *value.stringVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve string value from Keyword of a different type."));
+            "Attempt to retrieve string value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 template<> inline bool IDhsAdapter::Keyword::getValue<bool>() const {
@@ -265,7 +276,8 @@ template<> inline bool IDhsAdapter::Keyword::getValue<bool>() const {
         return value.doubleVal;
     }
     throw(std::logic_error(
-            "Attempt to retrieve bool value from Keyword of a different type."));
+            "Attempt to retrieve boolean value from Keyword of type "
+                    + DhsUtil::translateType(type)));
 }
 
 #endif /* DHSTRANSLATOR_SRC_IDHSADAPTER_H_ */

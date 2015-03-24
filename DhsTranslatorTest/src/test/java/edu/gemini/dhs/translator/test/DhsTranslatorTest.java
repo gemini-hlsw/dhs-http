@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DhsTranslatorTest {
-	private static final Integer numberOfThreads = 100;
+    private static final Integer numberOfThreads = 100;
     private final static String BASE_URI = "http://localhost:9090/axis2/services/dhs/images";
 
     @Test
@@ -223,7 +223,6 @@ public class DhsTranslatorTest {
      * Server.
      */
     @Test
-    @Ignore
     public void testSetKeywordWrongType() throws ClientProtocolException,
             IOException {
         String imageId = getImageWithParams();
@@ -260,31 +259,32 @@ public class DhsTranslatorTest {
     }
 
     @Test
-    public void testConcurrentCalls() throws InterruptedException, ExecutionException
-{
-    	final ConnectionRequester connectionRequester = new ConnectionRequester ();
-    	
-    	Callable<String> task = new Callable<String>(){
-			@Override
-			public String call() throws Exception {
-				return connectionRequester.requestConnection();
-			}
-    	};
-    	
-        List<Callable<String>> tasks = Collections.nCopies(numberOfThreads, task);
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        
+    public void testConcurrentCalls() throws InterruptedException,
+            ExecutionException {
+        final ConnectionRequester connectionRequester = new ConnectionRequester();
+
+        Callable<String> task = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return connectionRequester.requestConnection();
+            }
+        };
+
+        List<Callable<String>> tasks = Collections.nCopies(numberOfThreads,
+                task);
+        ExecutorService executorService = Executors
+                .newFixedThreadPool(numberOfThreads);
+
         List<Future<String>> futures = executorService.invokeAll(tasks);
         List<String> resultList = new ArrayList<String>(futures.size());
-        
+
         for (Future<String> future : futures) {
             // Throws an exception if an exception was thrown by the task.
             resultList.add(future.get());
         }
         assertEquals(numberOfThreads, Integer.valueOf(futures.size()));
     }
-    
-    
+
     private String getImage() throws ClientProtocolException, IOException {
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost post = new HttpPost(BASE_URI);
@@ -322,13 +322,13 @@ public class DhsTranslatorTest {
                 .getEntity().getContent()));
         return resNode.get("response").get("result").asText();
     }
-    
-    
-    private  class ConnectionRequester{
-    	
-    	public String requestConnection() throws ClientProtocolException, IOException{
-    		return getImage();
-    	}
+
+    private class ConnectionRequester {
+
+        public String requestConnection() throws ClientProtocolException,
+                IOException {
+            return getImage();
+        }
     }
 
 }

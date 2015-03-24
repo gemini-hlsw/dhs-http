@@ -1,13 +1,20 @@
 package edu.gemini.dhs.translator.test;
 
-import static org.junit.Assert.*;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -17,6 +24,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +36,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DhsTranslatorTest {
+    private static final Integer numberOfThreads = 100;
     private final static String BASE_URI = "http://localhost:9090/axis2/services/dhs/images";
 
     @Test
@@ -246,6 +258,33 @@ public class DhsTranslatorTest {
         assertEquals("Operation did not fail.", "error", status.asText());
     }
 
+    @Test
+    public void testConcurrentCalls() throws InterruptedException,
+            ExecutionException {
+        final ConnectionRequester connectionRequester = new ConnectionRequester();
+
+        Callable<String> task = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return connectionRequester.requestConnection();
+            }
+        };
+
+        List<Callable<String>> tasks = Collections.nCopies(numberOfThreads,
+                task);
+        ExecutorService executorService = Executors
+                .newFixedThreadPool(numberOfThreads);
+
+        List<Future<String>> futures = executorService.invokeAll(tasks);
+        List<String> resultList = new ArrayList<String>(futures.size());
+
+        for (Future<String> future : futures) {
+            // Throws an exception if an exception was thrown by the task.
+            resultList.add(future.get());
+        }
+        assertEquals(numberOfThreads, Integer.valueOf(futures.size()));
+    }
+
     private String getImage() throws ClientProtocolException, IOException {
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost post = new HttpPost(BASE_URI);
@@ -282,6 +321,14 @@ public class DhsTranslatorTest {
         JsonNode resNode = mapper.readTree(new InputStreamReader(response
                 .getEntity().getContent()));
         return resNode.get("response").get("result").asText();
+    }
+
+    private class ConnectionRequester {
+
+        public String requestConnection() throws ClientProtocolException,
+                IOException {
+            return getImage();
+        }
     }
 
 }

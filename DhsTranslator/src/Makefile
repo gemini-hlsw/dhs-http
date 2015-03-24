@@ -14,7 +14,7 @@ CXXFLAGS += --no-strict-aliasing
 endif
  
 #SRCS = %.cpp # source files
-SRCS = DhsAdapterSim.cpp DhsService.cpp service.cpp DhsAdapter.cpp
+SRCS = DhsAdapterSim.cpp DhsService.cpp service.cpp DhsAdapter.cpp DhsUtil.cpp
 OBJS = $(SRCS:.cpp=.o)
  
 .PHONY: all

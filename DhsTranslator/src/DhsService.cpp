@@ -300,8 +300,7 @@ optional<axiom_node_t*> DhsService::setParameters(const std::string *imageId,
             DHS_STATUS status = dhsAdapter->setImageLifeTime(id, lifetime);
             if (status != DHS_S_SUCCESS) {
                 return buildErrorResponse(DHS_ERROR,
-                        "DHS error while trying to set data set lifetime.",
-                        env);
+                        "DHS error while trying to set data set lifetime.", env);
             }
         }
         if (!contributors.empty()) {

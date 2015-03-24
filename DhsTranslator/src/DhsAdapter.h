@@ -12,16 +12,19 @@
 #include <dhs.h>
 #include <axutil_log.h>
 #include <pthread.h>
+#include <time.h>
 
 class DhsAdapter: public IDhsAdapter {
 private:
+    static const struct timespec LOCK_TIMEOUT;
+
     std::string myName;
     std::string serverHost;
     std::string serverName;
     axutil_log_t * log;
     pthread_mutex_t lock;
     DHS_CONNECT connection;
-    DHS_THREAD  thread;
+    DHS_THREAD thread;
     bool dhsInitialized;
 
 public:
@@ -35,7 +38,6 @@ public:
             const std::vector<std::string>& contribs);
     DHS_STATUS setImageKeywords(const ImageId& id,
             const std::vector<Keyword>& keywords, bool final = false);
-    void setTimeout(unsigned int timeout);
 };
 
 #endif /* DHSADAPTER_H_ */

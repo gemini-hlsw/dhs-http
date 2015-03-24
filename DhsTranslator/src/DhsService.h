@@ -17,6 +17,8 @@
 #include <axiom_element.h>
 #include <axiom_util.h>
 #include <dhs.h>
+#include "DhsUtil.h"
+
 
 #include "../src/IDhsAdapter.h"
 
@@ -81,8 +83,8 @@ private:
             const std::string &message, const axutil_env_t* env);
     static axiom_node_t* buildErrorResponse(const std::string &type,
             const std::string &message, const axutil_env_t* env);
-    static axiom_node_t* buildErrorResponse(const std::vector<axiom_node_t*> &array,
-            const axutil_env_t* env);
+    static axiom_node_t* buildErrorResponse(
+            const std::vector<axiom_node_t*> &array, const axutil_env_t* env);
     static axiom_node_t* buildSuccessResponse(axiom_node_t* result,
             const axutil_env_t* env);
 
@@ -125,65 +127,62 @@ private:
 
     /* Parse an array node to fill an array of type T. It relays on the
      * existence of a proper parseVal<T>. If there was a problem in the parsing
-     * it puts returns false.
+     * it returns false.
      */
     template<typename T> bool parseArrayNode(const axutil_env_t *env,
-            axiom_node_t *node, std::vector<T> &array, const std::string &type) {
-        bool ret = true;
+            axiom_node_t *node, std::vector<T> &array,
+            const std::string &type) {
 
-        if (axiom_node_get_node_type(node, env) == AXIOM_ELEMENT) {
-            axiom_element_t *nodeElement =
-                    (axiom_element_t *) axiom_node_get_data_element(node, env);
-            axutil_qname_t *typeAttrName = axutil_qname_create(env, "arrayType",
-                    "http://schemas.xmlsoap.org/soap/encoding/", "enc");
-            axiom_attribute_t *typeAttribute = axiom_element_get_attribute(
-                    nodeElement, env, typeAttrName);
-            if (typeAttribute != 0) {
-                axutil_string_t * arrayType = axiom_attribute_get_value_str(
-                        typeAttribute, env);
-                if (std::string(axutil_string_get_buffer(arrayType, env)).compare(
-                        0, type.size(), type) == 0) {
-                    for (axiom_node_t *itemNode = axiom_node_get_first_child(
-                            node, env); itemNode != NULL; itemNode =
-                            axiom_node_get_next_sibling(itemNode, env)) {
-                        if (axiom_node_get_node_type(itemNode, env)
-                                == AXIOM_ELEMENT) {
-                            axiom_element_t *itemElement =
-                                    (axiom_element_t *) axiom_node_get_data_element(
-                                            itemNode, env);
-                            axis2_char_t *itemElementName =
-                                    axiom_element_get_localname(itemElement,
-                                            env);
-                            if (std::string("item").compare(itemElementName)
-                                    == 0) {
-                                axiom_node_t *itemValNode =
-                                        axiom_node_get_first_child(itemNode,
-                                                env);
-                                boost::optional<T> val = parseVal<T>(env,
-                                        itemValNode);
-                                if (val) {
-                                    array.push_back(val.get());
-                                } else {
-                                    ret = false;
-                                }
-                            } else {
-                                ret = false;
-                            }
-                        } else {
-                            ret = false;
-                        }
-                    }
-                } else {
-                    ret = false;
-                }
-            } else {
-                ret = false;
-            }
-            axutil_qname_free(typeAttrName, env);
-        } else {
-            ret = false;
+        if (axiom_node_get_node_type(node, env) != AXIOM_ELEMENT) {
+            return false;
         }
-        return ret;
+
+        axiom_element_t *nodeElement =
+                (axiom_element_t *) axiom_node_get_data_element(node, env);
+        axutil_qname_t *typeAttrName = axutil_qname_create(env, "arrayType",
+                "http://schemas.xmlsoap.org/soap/encoding/", "enc");
+        axiom_attribute_t *typeAttribute = axiom_element_get_attribute(
+                nodeElement, env, typeAttrName);
+        axutil_qname_free(typeAttrName, env);
+
+        if (typeAttribute == NULL) {
+            return false;
+        }
+
+        axutil_string_t * arrayType = axiom_attribute_get_value_str(
+                typeAttribute, env);
+        if (std::string(axutil_string_get_buffer(arrayType, env)).compare(0,
+                type.size(), type) != 0) {
+            return false;
+        }
+
+        for (axiom_node_t *itemNode = axiom_node_get_first_child(node, env);
+                itemNode != NULL;
+                itemNode = axiom_node_get_next_sibling(itemNode, env)) {
+
+            if (axiom_node_get_node_type(itemNode, env) != AXIOM_ELEMENT) {
+                return false;
+            }
+
+            axiom_element_t *itemElement =
+                    (axiom_element_t *) axiom_node_get_data_element(itemNode,
+                            env);
+            axis2_char_t *itemElementName = axiom_element_get_localname(
+                    itemElement, env);
+            if (std::string("item").compare(itemElementName) != 0) {
+                return false;
+            }
+            axiom_node_t *itemValNode = axiom_node_get_first_child(itemNode,
+                    env);
+            boost::optional<T> val = parseVal<T>(env, itemValNode);
+            if (val) {
+                array.push_back(val.get());
+            } else {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool parseArrayNode(const axutil_env_t *env, axiom_node_t *node,
@@ -230,7 +229,8 @@ public:
     }
 };
 
-//Type bool needs an specialized version because it needs to enable alpha values in the conversion.
+//Type bool needs an specialized version because it needs to enable alpha
+//values in the conversion.
 template<> inline boost::optional<bool> DhsService::parseVal<bool>(
         const axutil_env_t *env, axiom_node_t *node) {
     if (env != NULL && node != NULL
@@ -323,7 +323,7 @@ template<> inline boost::optional<IDhsAdapter::Keyword> DhsService::parseVal<
             return buildKeyword<bool>(optName.get(), env, parentNode);
         }
         default: {
-            throw(std::logic_error("Keyword object with invalid type."));
+            throw(std::logic_error("Keyword object with invalid type " + DhsUtil::translateType(optType.get())));
         }
         }
     }

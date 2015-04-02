@@ -26,6 +26,9 @@ private:
     DHS_CONNECT connection;
     DHS_THREAD thread;
     bool dhsInitialized;
+    bool isConnected;
+
+    bool checkConnection();
 
 public:
     DhsAdapter(std::string &myName, std::string &serverHost,

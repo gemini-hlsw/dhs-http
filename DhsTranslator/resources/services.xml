@@ -1,7 +1,7 @@
 <service name="dhs">
 	<parameter name="ServiceClass" locked="xsd:false">DhsTranslator</parameter>
 	<parameter name="loadServiceAtStartup" locked="xsd:false">true</parameter>
-    <parameter name="myName" locked="xsd:false">seqexec</parameter>
+    <parameter name="myName" locked="xsd:false">dhs-http</parameter>
     <parameter name="dhsHost" locked="xsd:false">cpodhsxx</parameter>  
     <parameter name="dhsName" locked="xsd:false">dataServerTestSS</parameter>
     <parameter name="dhsSimulate" locked="xsd:false">true</parameter>

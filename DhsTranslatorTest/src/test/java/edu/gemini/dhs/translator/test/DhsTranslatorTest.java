@@ -261,30 +261,30 @@ public class DhsTranslatorTest {
             ExecutionException {
         final ConnectionRequester connectionRequester = new ConnectionRequester();
 
-        Callable<String> task = new Callable<String>() {
+        final Callable<Boolean> task = new Callable<Boolean>() {
             @Override
-            public String call(){
+            public Boolean call(){
                 try {
-                    return connectionRequester.requestConnection();
+                    return connectionRequester.requestConnection()!=null;
                 } catch (Exception e) {
                     isNotOk = true;
                 } 
-                return null;
+                return false;
             }
         };
 
-        List<Callable<String>> tasks = Collections.nCopies(numberOfThreads,
+        final List<Callable<Boolean>> tasks = Collections.nCopies(numberOfThreads,
                 task);
-        ExecutorService executorService = Executors
+        final ExecutorService executorService = Executors
                 .newFixedThreadPool(numberOfThreads);
 
-        List<Future<String>> futures = executorService.invokeAll(tasks);
+        final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
         executorService.shutdown();
-        if(! executorService.awaitTermination(5, TimeUnit.SECONDS)){
+        if(!executorService.awaitTermination(5, TimeUnit.SECONDS)){
             isNotOk = true;
         }
-        for(Future<String> f : futures){
-            if( !f.isDone() || f.get()==null){
+        for(Future<Boolean> f : futures){
+            if(f.isDone() && f.get()){
                 isNotOk = true;
                 break;
             }

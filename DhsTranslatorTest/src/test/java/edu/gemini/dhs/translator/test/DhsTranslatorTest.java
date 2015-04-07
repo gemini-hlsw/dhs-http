@@ -284,7 +284,7 @@ public class DhsTranslatorTest {
             isNotOk = true;
         }
         for(Future<Boolean> f : futures){
-            if(f.isDone() && f.get()){
+            if(!(f.isDone() && f.get())){
                 isNotOk = true;
                 break;
             }

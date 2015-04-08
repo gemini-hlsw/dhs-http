@@ -1,13 +1,20 @@
 package edu.gemini.dhs.translator.test;
 
-import static org.junit.Assert.*;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -17,6 +24,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +33,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DhsTranslatorTest {
+    private static final Integer numberOfThreads = 100;
     private final static String BASE_URI = "http://localhost:9090/axis2/services/dhs/images";
+    private static boolean isNotOk = false;
 
     @Test
     public void testCreateImage() throws ClientProtocolException, IOException {
@@ -246,6 +256,43 @@ public class DhsTranslatorTest {
         assertEquals("Operation did not fail.", "error", status.asText());
     }
 
+    @Test
+    public void testConcurrentCalls() throws InterruptedException,
+            ExecutionException {
+        final ConnectionRequester connectionRequester = new ConnectionRequester();
+
+        final Callable<Boolean> task = new Callable<Boolean>() {
+            @Override
+            public Boolean call(){
+                try {
+                    return connectionRequester.requestConnection()!=null;
+                } catch (Exception e) {
+                    isNotOk = true;
+                } 
+                return false;
+            }
+        };
+
+        final List<Callable<Boolean>> tasks = Collections.nCopies(numberOfThreads,
+                task);
+        final ExecutorService executorService = Executors
+                .newFixedThreadPool(numberOfThreads);
+
+        final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
+        executorService.shutdown();
+        if(!executorService.awaitTermination(5, TimeUnit.SECONDS)){
+            isNotOk = true;
+        }
+        for(Future<Boolean> f : futures){
+            if(!(f.isDone() && f.get())){
+                isNotOk = true;
+                break;
+            }
+        }
+        
+        assertFalse(isNotOk);
+    }
+
     private String getImage() throws ClientProtocolException, IOException {
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost post = new HttpPost(BASE_URI);
@@ -282,6 +329,14 @@ public class DhsTranslatorTest {
         JsonNode resNode = mapper.readTree(new InputStreamReader(response
                 .getEntity().getContent()));
         return resNode.get("response").get("result").asText();
+    }
+
+    private class ConnectionRequester {
+
+        public String requestConnection() throws ClientProtocolException,
+                IOException {
+            return getImage();
+        }
     }
 
 }

@@ -9,8 +9,7 @@
 #include "DhsAdapter.h"
 
 using namespace std;
-
-const struct timespec DhsAdapter::LOCK_TIMEOUT = { 5, 0 };
+using namespace boost;
 
 DhsAdapter::DhsAdapter(std::string &myName, string &serverHost,
         string &serverName, axutil_log_t * log) {
@@ -21,8 +20,6 @@ DhsAdapter::DhsAdapter(std::string &myName, string &serverHost,
 
     isConnected = false;
     connection = DHS_CONNECT_NULL;
-
-    pthread_mutex_init(&lock, NULL);
 
     DHS_STATUS status = DHS_S_SUCCESS;
     dhsInit(this->myName.c_str(), 1024 * 1024, &status);
@@ -37,22 +34,20 @@ DhsAdapter::DhsAdapter(std::string &myName, string &serverHost,
 DhsAdapter::~DhsAdapter() {
     if (connection != DHS_CONNECT_NULL) {
         DHS_STATUS status = DHS_S_SUCCESS;
-        pthread_mutex_lock(&lock);
+        lock.lock();
         dhsDisconnect(connection, &status);
         connection = DHS_CONNECT_NULL;
-        pthread_mutex_unlock(&lock);
+        lock.unlock();
     }
     if (dhsInitialized) {
         DHS_STATUS status = DHS_S_SUCCESS;
         dhsEventLoopEnd(&status);
         dhsExit(&status);
     }
-
-    pthread_mutex_destroy(&lock);
 }
 
 bool DhsAdapter::checkConnection() {
-    if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
+    if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
         return false;
     }
     if(!isConnected) {
@@ -61,7 +56,7 @@ bool DhsAdapter::checkConnection() {
                     NULL, &status);
         isConnected = ( status == DHS_S_SUCCESS);
     }
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
     return isConnected;
 }
 
@@ -73,11 +68,11 @@ DHS_STATUS DhsAdapter::createImage(ImageId& id) {
         return DHS_E_CTL_CMD;
     }
 
-    if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
+    if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
         return DHS_E_CTL_CMD;
     }
     char *newId = dhsBdName(connection, &status);
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
     if (status == DHS_S_SUCCESS) {
         id.assign(newId);
     }
@@ -93,11 +88,11 @@ DHS_STATUS DhsAdapter::setImageLifeTime(const ImageId& id,
         return DHS_E_CTL_CMD;
     }
 
-    if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
+    if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
         return DHS_E_CTL_CMD;
     }
     dhsBdCtl(connection, DHS_BD_CTL_LIFETIME, id.c_str(), lifeTime, &status);
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
 
     return status;
 }
@@ -118,12 +113,12 @@ DHS_STATUS DhsAdapter::setImageContrib(const ImageId& id,
             array[i++] = iter->c_str();
         }
 
-        if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
+        if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
             return DHS_E_CTL_CMD;
         }
         dhsBdCtl(connection, DHS_BD_CTL_CONTRIB, id.c_str(),
                 (int) contribs.size(), array, &status);
-        pthread_mutex_unlock(&lock);
+        lock.unlock();
 
         delete[] array;
     }
@@ -199,7 +194,7 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
             }
         }
         if (dhsAvListSize(avList, &status) > 0) {
-            if (pthread_mutex_timedlock(&lock, &LOCK_TIMEOUT) != 0) {
+            if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
                 return DHS_E_CTL_CMD;
             }
             DHS_TAG tag = dhsBdPut(connection, id.c_str(), DHS_BD_PT_DS,
@@ -210,7 +205,7 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
             }
             DHS_STATUS s = DHS_S_SUCCESS;
             dhsTagFree(tag, &s);
-            pthread_mutex_unlock(&lock);
+            lock.unlock();
         }
         DHS_STATUS status2 = DHS_S_SUCCESS;
         dhsAvListFree(avList, &status2);

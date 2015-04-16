@@ -76,7 +76,7 @@ public class DhsTranslatorTest {
 
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         reqNode.with("createImage").put("lifetime", "PERMANENT")
-                .putArray("contributors").add("seqexec").add("gsaoi");
+                .putArray("contributors").add("dhs-http").add("gsaoi");
 
         StringEntity input = new StringEntity(reqNode.toString());
         post.setEntity(input);
@@ -106,11 +106,10 @@ public class DhsTranslatorTest {
         HttpClient client = HttpClientBuilder.create().build();
         String imageId = getImage();
 
-        HttpPut put = new HttpPut(
-                "http://localhost:9090/axis2/services/dhs/images/" + imageId);
+        HttpPut put = new HttpPut(BASE_URI + "/" + imageId);
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         reqNode.with("setParameters").put("lifetime", "PERMANENT")
-                .putArray("contributors").add("seqexec").add("gsaoi");
+                .putArray("contributors").add("dhs-http").add("gsaoi");
 
         StringEntity input = new StringEntity(reqNode.toString());
         put.setEntity(input);
@@ -135,9 +134,7 @@ public class DhsTranslatorTest {
         HttpClient client = HttpClientBuilder.create().build();
         String imageId = getImageWithParams();
 
-        HttpPut put = new HttpPut(
-                "http://localhost:9090/axis2/services/dhs/images/" + imageId
-                        + "/keywords");
+        HttpPut put = new HttpPut(BASE_URI + "/" + imageId + "/keywords");
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
                 .putArray("keywords");
@@ -185,9 +182,7 @@ public class DhsTranslatorTest {
         String imageId = getImageWithParams();
         HttpClient client = HttpClientBuilder.create().build();
 
-        HttpPut put = new HttpPut(
-                "http://localhost:9090/axis2/services/dhs/images/" + imageId
-                        + "/keywords");
+        HttpPut put = new HttpPut(BASE_URI + "/" + imageId + "/keywords");
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
                 .putArray("keywords");
@@ -226,9 +221,7 @@ public class DhsTranslatorTest {
         String imageId = getImageWithParams();
         HttpClient client = HttpClientBuilder.create().build();
 
-        HttpPut put = new HttpPut(
-                "http://localhost:9090/axis2/services/dhs/images/" + imageId
-                        + "/keywords");
+        HttpPut put = new HttpPut(BASE_URI + "/" + imageId + "/keywords");
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
                 .putArray("keywords");
@@ -263,33 +256,33 @@ public class DhsTranslatorTest {
 
         final Callable<Boolean> task = new Callable<Boolean>() {
             @Override
-            public Boolean call(){
+            public Boolean call() {
                 try {
-                    return connectionRequester.requestConnection()!=null;
+                    return connectionRequester.requestConnection() != null;
                 } catch (Exception e) {
                     isNotOk = true;
-                } 
+                }
                 return false;
             }
         };
 
-        final List<Callable<Boolean>> tasks = Collections.nCopies(numberOfThreads,
-                task);
+        final List<Callable<Boolean>> tasks = Collections.nCopies(
+                numberOfThreads, task);
         final ExecutorService executorService = Executors
                 .newFixedThreadPool(numberOfThreads);
 
         final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
         executorService.shutdown();
-        if(!executorService.awaitTermination(5, TimeUnit.SECONDS)){
+        if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
             isNotOk = true;
         }
-        for(Future<Boolean> f : futures){
-            if(!(f.isDone() && f.get())){
+        for (Future<Boolean> f : futures) {
+            if (!(f.isDone() && f.get())) {
                 isNotOk = true;
                 break;
             }
         }
-        
+
         assertFalse(isNotOk);
     }
 
@@ -318,7 +311,7 @@ public class DhsTranslatorTest {
 
         ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
         reqNode.with("createImage").put("lifetime", "PERMANENT")
-                .putArray("contributors").add("seqexec").add("gsaoi");
+                .putArray("contributors").add("dhs-http").add("gsaoi");
 
         StringEntity input = new StringEntity(reqNode.toString());
         post.setEntity(input);

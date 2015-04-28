@@ -11,18 +11,18 @@
 #include "IDhsAdapter.h"
 #include <dhs.h>
 #include <axutil_log.h>
-#include <pthread.h>
+#include <boost/thread.hpp>
 #include <time.h>
 
 class DhsAdapter: public IDhsAdapter {
 private:
-    static const struct timespec LOCK_TIMEOUT;
+    static const int LOCK_TIMEOUT = 5; //timeout for locks, in seconds.
 
     std::string myName;
     std::string serverHost;
     std::string serverName;
     axutil_log_t * log;
-    pthread_mutex_t lock;
+    boost::timed_mutex lock;
     DHS_CONNECT connection;
     DHS_THREAD thread;
     bool dhsInitialized;

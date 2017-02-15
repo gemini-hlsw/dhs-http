@@ -273,7 +273,7 @@ template<> inline std::string IDhsAdapter::Keyword::getValue<std::string>() cons
 
 template<> inline bool IDhsAdapter::Keyword::getValue<bool>() const {
     if (type == DHS_DT_BOOLEAN) {
-        return value.doubleVal;
+        return value.boolVal;
     }
     throw(std::logic_error(
             "Attempt to retrieve boolean value from Keyword of type "

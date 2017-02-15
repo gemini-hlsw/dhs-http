@@ -1,8 +1,8 @@
 %define _prefix __auto__
 %define gemopt opt
 %define name DhsTranslator
-%define version __auto__
-%define release __auto__
+%define version 1.1
+%define release 1
 %define repository gemini
 
 %define debug_package %{nil}

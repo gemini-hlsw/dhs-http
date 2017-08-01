@@ -135,6 +135,9 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
     }
 
     if (!keywords.empty()) {
+        if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
+            return DHS_E_CTL_CMD;
+        }
         DHS_AV_LIST avList = dhsAvListNew(&status);
         for (vector<Keyword>::const_iterator iter = keywords.begin();
                 iter != keywords.end(); iter++) {
@@ -194,21 +197,18 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
             }
         }
         if (dhsAvListSize(avList, &status) > 0) {
-            if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
-                return DHS_E_CTL_CMD;
-            }
             DHS_TAG tag = dhsBdPut(connection, id.c_str(), DHS_BD_PT_DS,
-                    final ? DHS_TRUE : DHS_FALSE, avList, &status);
+                    final ? DHS_TRUE : DHS_FALSE, avList, NULL, &status);
             dhsWait(1, &tag, &status);
             if (dhsStatus(tag, NULL, &status) != DHS_CS_DONE) {
                 status = DHS_E_CTL_CMD;
             }
             DHS_STATUS s = DHS_S_SUCCESS;
             dhsTagFree(tag, &s);
-            lock.unlock();
         }
         DHS_STATUS status2 = DHS_S_SUCCESS;
         dhsAvListFree(avList, &status2);
+        lock.unlock();
     }
 
     return status;

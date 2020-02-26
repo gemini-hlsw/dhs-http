@@ -9,8 +9,10 @@ This software uses the Apache Axis2/C framework. Specifically, it uses the axis2
 ## Building
 This module requires the following modules to build:
 * dhsClient-devel (available in the Gemini Production RPM repository).
-* axis2c-unofficial compiled with JSON support (package axis2c-unofficial-devel is available in the Gemini Development repository.).
+* axis2c-unofficial compiled with JSON support, and axis2c-unofficial-devel (package axis2c-unofficial-devel is available in the Gemini Development repository).
 * boost-devel (available in the CentOS repository).
+* gcc
+* gcc-c++
 
 Build the module from the DhsTranslator folder:
 

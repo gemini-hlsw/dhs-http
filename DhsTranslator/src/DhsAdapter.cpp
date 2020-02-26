@@ -7,6 +7,9 @@
 
 #include "defines.h"
 #include "DhsAdapter.h"
+#include <sstream>
+#include <iomanip>
+#include <iterator>
 
 using namespace std;
 using namespace boost;
@@ -22,6 +25,7 @@ DhsAdapter::DhsAdapter(std::string &myName, string &serverHost,
     connection = DHS_CONNECT_NULL;
 
     DHS_STATUS status = DHS_S_SUCCESS;
+    AXIS2_LOG_INFO_MSG(log, "Initializing DHS library.");
     dhsInit(this->myName.c_str(), 1024 * 1024, &status);
     dhsEventLoop(DHS_ELT_THREADED, &thread, &status);
     if (status == DHS_S_SUCCESS) {
@@ -40,6 +44,7 @@ DhsAdapter::~DhsAdapter() {
         lock.unlock();
     }
     if (dhsInitialized) {
+        AXIS2_LOG_INFO_MSG(log, "Stopping DHS event loop.");
         DHS_STATUS status = DHS_S_SUCCESS;
         dhsEventLoopEnd(&status);
         dhsExit(&status);
@@ -47,19 +52,28 @@ DhsAdapter::~DhsAdapter() {
 }
 
 bool DhsAdapter::checkConnection() {
+
     if (!lock.timed_lock(posix_time::seconds(LOCK_TIMEOUT))) {
         return false;
     }
-    if(!isConnected) {
+
+    stringstream msg1, msg2;
+
+	msg1 << "Checking connection, state is " << boolalpha << isConnected << ".";
+    AXIS2_LOG_INFO_MSG(log, msg1.str().c_str());
+
+	if(!isConnected) {
         DHS_STATUS status = DHS_S_SUCCESS;
+        AXIS2_LOG_INFO_MSG(log, "Establishing connection to DHS.");
         connection = dhsConnect(this->serverHost.c_str(), this->serverName.c_str(),
                     NULL, &status);
         isConnected = ( status == DHS_S_SUCCESS);
+    	msg2 << "Connection attempt result is " << boolalpha << isConnected << ".";
+        AXIS2_LOG_INFO_MSG(log, msg2.str().c_str());
     }
     lock.unlock();
     return isConnected;
 }
-
 
 DHS_STATUS DhsAdapter::createImage(ImageId& id) {
     DHS_STATUS status = DHS_S_SUCCESS;
@@ -73,8 +87,15 @@ DHS_STATUS DhsAdapter::createImage(ImageId& id) {
     }
     char *newId = dhsBdName(connection, &status);
     lock.unlock();
+
+    stringstream msg1, msg2;
+    msg1 << "Create image request. Result is " << boolalpha << (status == DHS_S_SUCCESS) << ".";
+    AXIS2_LOG_INFO_MSG(log, msg1.str().c_str());
+
     if (status == DHS_S_SUCCESS) {
         id.assign(newId);
+        msg2 << "New image id is " << id << ".";
+        AXIS2_LOG_INFO_MSG(log, msg2.str().c_str());
     }
 
     return status;
@@ -93,6 +114,11 @@ DHS_STATUS DhsAdapter::setImageLifeTime(const ImageId& id,
     }
     dhsBdCtl(connection, DHS_BD_CTL_LIFETIME, id.c_str(), lifeTime, &status);
     lock.unlock();
+
+    stringstream msg;
+    msg << "Set life time for image " << id << " to " << DhsUtil::translateLifetime(lifeTime) 
+        << ", result is " << boolalpha << (status == DHS_S_SUCCESS) << ".";
+    AXIS2_LOG_INFO_MSG(log, msg.str().c_str());
 
     return status;
 }
@@ -122,6 +148,12 @@ DHS_STATUS DhsAdapter::setImageContrib(const ImageId& id,
 
         delete[] array;
     }
+
+    stringstream msg;
+    msg << "Set contributors for image " << id << ": {";
+    copy(contribs.begin(), contribs.end(), ostream_iterator<string>(msg, " "));
+    msg << "}, result is " << boolalpha << (status == DHS_S_SUCCESS) << ".";
+    AXIS2_LOG_INFO_MSG(log, msg.str().c_str());
 
     return status;
 }
@@ -210,6 +242,11 @@ DHS_STATUS DhsAdapter::setImageKeywords(const ImageId& id,
         dhsAvListFree(avList, &status2);
         lock.unlock();
     }
+
+    stringstream msg;
+    msg << "Set " << keywords.size() << " keywords for image " << id << ",  result is "
+        << boolalpha << (status == DHS_S_SUCCESS) << ".";
+    AXIS2_LOG_INFO_MSG(log, msg.str().c_str());
 
     return status;
 }

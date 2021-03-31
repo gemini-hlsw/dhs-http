@@ -11,6 +11,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <ctime>
 #include <boost/optional.hpp>
 #include <axis2_svc_skeleton.h>
 #include <axiom_text.h>
@@ -18,6 +19,7 @@
 #include <axiom_util.h>
 #include <dhs.h>
 #include "DhsUtil.h"
+#include "MessageCache.h"
 
 
 #include "../src/IDhsAdapter.h"
@@ -29,6 +31,7 @@ private:
     static const char * const MY_NAME_PARAM;
     static const char * const DHS_HOST_PARAM;
     static const char * const DHS_NAME_PARAM;
+    static const char * const CACHE_MEMORY_PARAM;
     static const char * const RESPONSE_NODE_NAME;
     static const char * const STATUS_NODE_NAME;
     static const char * const RESULT_NODE_NAME;
@@ -44,7 +47,10 @@ private:
     static const char * const BAD_REQUEST;
     static const char * const INTERNAL_ERROR;
 
+    static const std::time_t DEFAULT_CACHE_MEMORY;
+
     IDhsAdapter *dhsAdapter;
+    MessageCache *msgCache;
     static DhsService *theService;
     static const axis2_svc_skeleton_ops_t skeletonOps;
 
@@ -202,6 +208,23 @@ private:
         return parseArrayNode(env, node, array, "object");
     }
 
+    /*
+     * Checks if a message was already processed successfully. If yes, it returns an empty optional. Otherwise it returns an optional
+     * with the message as a string, that can be later saved for future checks.
+     */
+    boost::optional<std::string> checkTransaction(time_t currentTime, std::string const &imageId, const axutil_env_t *env, axiom_node_t *node) {
+        std::string v(axiom_node_to_string(node, env));
+
+        msgCache->purgeOldMessages(currentTime);
+        if(msgCache->exists(IDhsAdapter::imageIdFromString(imageId), v))
+            return boost::optional<std::string>();
+        return boost::optional<std::string>(v);
+    }
+
+    void recordTransaction(std::string const &imageId, time_t currentTime, std::string const &msg) {
+        msgCache->add(imageId, currentTime, msg);
+    }
+
 public:
     virtual ~DhsService();
     static axis2_svc_skeleton_t* create(const axutil_env_t *env);
@@ -225,7 +248,17 @@ public:
     }
 
     void setDhsAdapter(IDhsAdapter* dhsAdapter) {
+        if(this->dhsAdapter != NULL) delete this->dhsAdapter;
         this->dhsAdapter = dhsAdapter;
+    }
+
+    const MessageCache* getMsgCache() const {
+        return msgCache;
+    }
+
+    void setMsgCache(MessageCache *msgCache) {
+        if(this->msgCache != NULL) delete this->msgCache;
+        this->msgCache = msgCache;
     }
 };
 
@@ -323,7 +356,7 @@ template<> inline boost::optional<IDhsAdapter::Keyword> DhsService::parseVal<
             return buildKeyword<bool>(optName.get(), env, parentNode);
         }
         default: {
-            throw(std::logic_error("Keyword object with invalid type " + DhsUtil::translateType(optType.get())));
+            throw(std::logic_error("Keyword object with invalid type " + optType.get()));
         }
         }
     }

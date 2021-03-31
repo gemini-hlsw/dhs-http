@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <iterator>
+#include <dhs.h>
 
 using namespace std;
 
@@ -58,7 +59,7 @@ DHS_STATUS DhsAdapterSim::createImage(ImageId &id) {
     stringstream formatedId;
     formatedId << 'S' << setfill('0') << setw(4) << (local->tm_year + 1900)
             << setw(2) << local->tm_mon << local->tm_mday << 'S' << setw(4)
-            << nextId;
+            << latchedId;
 
     id.assign(formatedId.str());
 

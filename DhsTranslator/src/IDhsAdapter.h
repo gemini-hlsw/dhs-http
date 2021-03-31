@@ -23,6 +23,8 @@
 class IDhsAdapter {
 public:
     typedef std::string ImageId; /**< Image Id type */
+    static ImageId& imageIdFromString(std::string &str) { return str; }
+    static ImageId const & imageIdFromString(std::string const &str) { return str; }
     /**
      * Class to define keywords
      */

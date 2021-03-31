@@ -1,8 +1,8 @@
 %define _prefix __auto__
 %define gemopt opt
 %define name DhsTranslator
-%define version 1.1
-%define release 3
+%define version 1.2
+%define release 0
 %define repository gemini
 
 %define debug_package %{nil}
@@ -19,8 +19,8 @@ BuildRoot: /var/tmp/%{name}-%{version}-root
 BuildArch: %{arch}
 Prefix: %{_prefix}
 ## You may specify dependencies here
-BuildRequires:axis2c-unofficial-devel%{?_isa} dhsClient-devel%{?_isa} drama-devel%{?_isa}
-Requires: axis2c-unofficial%{?_isa} drama%{?_isa} dhsClient%{?_isa}
+BuildRequires:axis2c-unofficial-devel%{?_isa} dhsClient-devel%{?_isa} drama-devel%{?_isa} boost-devel%{?_isa}
+Requires: axis2c-unofficial%{?_isa} drama%{?_isa} dhsClient%{?_isa} boost-system%{?_isa}
 ## Switch dependency checking off
 # AutoReqProv: no
 

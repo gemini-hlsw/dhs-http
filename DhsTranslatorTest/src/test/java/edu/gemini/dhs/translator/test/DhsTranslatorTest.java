@@ -172,6 +172,74 @@ public class DhsTranslatorTest {
         assertEquals("Operation failed.", "success", status.asText());
     }
 
+    private HttpResponse sendKeywords(String imageId) throws ClientProtocolException, IOException {
+        HttpClient client = HttpClientBuilder.create().build();
+    	HttpPut put = new HttpPut(BASE_URI + "/" + imageId + "/keywords");
+        ObjectNode reqNode = new JsonNodeFactory(true).objectNode();
+        ArrayNode keysArray = reqNode.with("setKeywords").put("final", false)
+                .putArray("keywords");
+        keysArray.addObject().put("name", "instrument").put("type", "STRING")
+                .put("value", "GMOS-S");
+        keysArray.addObject().put("name", "OBSERVAT").put("type", "STRING")
+                .put("value", "Gemini-South");
+        keysArray.addObject().put("name", "RA").put("type", "DOUBLE")
+                .put("value", 162.31029167);
+        keysArray.addObject().put("name", "PREIMAGE").put("type", "BOOLEAN")
+                .put("value", false);
+        keysArray.addObject().put("name", "NAMPS").put("type", "INT32")
+                .put("value", 3);
+
+        StringEntity input = new StringEntity(reqNode.toString());
+        put.setEntity(input);
+        put.setHeader("Content-Type", "application/json");
+        
+        return client.execute(put);
+    }
+    
+    @Test
+    public void testSetKeywordsTwice() throws ClientProtocolException, IOException {
+
+        String imageId = getImageWithParams();
+
+        HttpResponse response = sendKeywords(imageId);
+
+        assertTrue("Operation rejected.", response.getStatusLine()
+                .getStatusCode() == HttpStatus.SC_OK);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode responseNode = mapper.readTree(
+                new InputStreamReader(response.getEntity().getContent())).get(
+                "response");
+
+        JsonNode status = null;
+        if (responseNode != null) {
+            status = responseNode.get("status");
+        }
+
+        assertNotNull("Respose did not response node.", responseNode);
+        assertNotNull("Respose did not contain status.", status);
+        assertEquals("Operation failed.", "success", status.asText());
+        
+        response = sendKeywords(imageId);
+
+        assertTrue("Operation rejected.", response.getStatusLine()
+                .getStatusCode() == HttpStatus.SC_OK);
+
+        mapper = new ObjectMapper();
+        responseNode = mapper.readTree(
+                new InputStreamReader(response.getEntity().getContent())).get(
+                "response");
+
+        status = null;
+        if (responseNode != null) {
+            status = responseNode.get("status");
+        }
+
+        assertNotNull("Respose did not response node.", responseNode);
+        assertNotNull("Respose did not contain status.", status);
+        assertEquals("Operation failed.", "success", status.asText());
+    }
+
     /*
      * Attempt to set string value to integer keyword. Rejected by the HTTP
      * service.

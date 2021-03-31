@@ -19,8 +19,8 @@ BuildRoot: /var/tmp/%{name}-%{version}-root
 BuildArch: %{arch}
 Prefix: %{_prefix}
 ## You may specify dependencies here
-BuildRequires:axis2c-unofficial-devel%{?_isa} dhsClient-devel%{?_isa} drama-devel%{?_isa}
-Requires: axis2c-unofficial%{?_isa} drama%{?_isa} dhsClient%{?_isa}
+BuildRequires:axis2c-unofficial-devel%{?_isa} dhsClient-devel%{?_isa} drama-devel%{?_isa} boost-devel%{?_isa}
+Requires: axis2c-unofficial%{?_isa} drama%{?_isa} dhsClient%{?_isa} boost-system%{?_isa}
 ## Switch dependency checking off
 # AutoReqProv: no
 

@@ -10,6 +10,7 @@
 #include <axiom_element.h>
 #include <axis2_conf.h>
 #include <sstream>
+#include <ctime>
 #include "DhsAdapter.h"
 #include "DhsAdapterSim.h"
 
@@ -21,6 +22,7 @@ const char * const DhsService::SIM_PARAM = "dhsSimulate";
 const char * const DhsService::MY_NAME_PARAM = "myName";
 const char * const DhsService::DHS_HOST_PARAM = "dhsHost";
 const char * const DhsService::DHS_NAME_PARAM = "dhsName";
+const char * const DhsService::CACHE_MEMORY_PARAM = "memoryPeriod";
 const char * const DhsService::RESPONSE_NODE_NAME = "response";
 const char * const DhsService::STATUS_NODE_NAME = "status";
 const char * const DhsService::RESULT_NODE_NAME = "result";
@@ -36,6 +38,7 @@ const char * const DhsService::ENC_NAMESPACE_URI =
 const char * const DhsService::DHS_ERROR = "DHS_ERROR";
 const char * const DhsService::BAD_REQUEST = "BAD_REQUEST";
 const char * const DhsService::INTERNAL_ERROR = "INTERNAL_SERVER_ERROR";
+const std::time_t DhsService::DEFAULT_CACHE_MEMORY = 90; // seconds
 
 DhsService *DhsService::theService = NULL;
 const axis2_svc_skeleton_ops_t DhsService::skeletonOps = { DhsService::stubInit,
@@ -44,11 +47,15 @@ const axis2_svc_skeleton_ops_t DhsService::skeletonOps = { DhsService::stubInit,
 
 DhsService::DhsService() {
     dhsAdapter = NULL;
+    msgCache = NULL;
 }
 
 DhsService::~DhsService() {
     if (dhsAdapter != NULL) {
         delete dhsAdapter;
+    }
+    if(msgCache != NULL) {
+        delete msgCache;
     }
 }
 
@@ -179,6 +186,22 @@ int DhsService::stubInitWithConfig(axis2_svc_skeleton_t* svc_skeleton,
     }
 
     theService->setDhsAdapter(pAdapter);
+
+    time_t memoryPeriod = DEFAULT_CACHE_MEMORY;
+    param = axis2_svc_get_param(service, env, CACHE_MEMORY_PARAM);
+    if(param != NULL) {
+        const char* v = (const char*) axutil_param_get_value(param, env);
+        if(v != NULL) {
+            double l = 0.0;
+            istringstream converter(v);
+            try {
+                converter >> l;
+                memoryPeriod = (time_t)l;
+            } catch (...) {}
+        }
+    }
+
+    theService->setMsgCache(new MessageCache(memoryPeriod));
 
     return theService->initWithConfig(svc_skeleton, env, conf);
 }
@@ -355,10 +378,17 @@ axiom_node_t* DhsService::setKeywords(const axutil_env_t* env,
     }
 
     if (!id.empty() && keywordsParsed) {
-        DHS_STATUS status = dhsAdapter->setImageKeywords(id, keywords, final);
-        if (status != DHS_S_SUCCESS) {
-            return buildErrorResponse(DHS_ERROR,
-                    "DHS error while trying to set data set keywords.", env);
+        time_t timestamp = time(NULL);
+        optional<string> msg = checkTransaction(timestamp, id, env, node);
+        if(msg){
+            DHS_STATUS status = dhsAdapter->setImageKeywords(id, keywords, final);
+            if (status != DHS_S_SUCCESS) {
+                return buildErrorResponse(DHS_ERROR,
+                        "DHS error while trying to set data set keywords.", env);
+            }
+            recordTransaction(id, timestamp, msg.get());
+        } else {
+            AXIS2_LOG_INFO_MSG(env->log, "Duplicated setKeywords request, skipped.");
         }
     } else {
         if (id.empty()) {

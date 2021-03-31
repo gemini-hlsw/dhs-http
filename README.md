@@ -71,6 +71,7 @@ HTTP method: POST
 URI: http://{server}:9090/axis2/services/dhs/images
 
 Body:
+
 ```
 { "createImage" : {
         "lifetime" : /* DHS lifetime, optional */
@@ -80,6 +81,7 @@ Body:
 ```
 
 Response: The response contains the unique id for the new image.
+
 ```
 { "response" : {
         "status" : "success"
@@ -95,6 +97,7 @@ HTTP method: PUT
 URI: http://{server}:9090/axis2/services/dhs/images/{id}
 
 Body:
+
 ```
 { "setParameters" : {
         "lifetime" : /* DHS lifetime, optional */
@@ -112,6 +115,7 @@ HTTP method: PUT
 URI: http://{server}:9090/axis2/services/dhs/images/{id}/keywords
 
 Body:
+
 ```
 { "setKeywords" : { 
     "final" : boolean /* indicates if this is the last piece of data for the image */
